@@ -1,10 +1,10 @@
 <template>
     <div class="col-span-full">
         <label for="cover-photo" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ title }}</label>
-        <div id="upload-container" 
-        @ondragover="onDragOver"
-        @ondragenter="onDragEnter"
-        @ondrop="onDrop"
+        <div id="upload-container"
+        @dragover.prevent
+        @dragenter.prevent
+        @drop="onDrop"
         class="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10 dark:border-white/25">
             <div class="text-center">
                 <PhotoIcon class="mx-auto size-12 text-gray-300 dark:text-gray-600" aria-hidden="true" />
@@ -16,7 +16,7 @@
                     <p class="pl-1">or drag and drop</p>
                 </div>
                 <p v-if="files.length <= 0" class="text-xs/5 text-gray-600 dark:text-gray-400">PNG, JPG, GIF up to {{ uploadSize }} {{ uploadUnit }}</p>
-                <ul>   
+                <ul>
                     <li v-for="file in files" :key="file.name" class="dark:text-gray-400">
                         {{ file.name }}
                     </li>
@@ -24,26 +24,10 @@
             </div>
         </div>
     </div>
-    {{ test }} 1
 </template>
 
 <script setup lang="ts">
-    import { PhotoIcon, UserCircleIcon } from '@heroicons/vue/24/solid';
-
-    const files = ref([]);
-
-    function onDragOver(event: Event){
-        event.preventDefault();
-    }
-
-    function onDragEnter(event: Event){
-        event.preventDefault();
-    }
-
-    function onDrop(event: Event){
-        files.value = Array.from(event.dataTransfer.files || []);
-        event.preventDefault();
-    }
+    import { PhotoIcon } from '@heroicons/vue/24/solid';
 
     interface Props {
         title: String,
@@ -51,11 +35,27 @@
         uploadUnit: 'KB' | 'MB' | 'GB',
     }
 
-    function onFileSelect(e: Event){
+    const props = defineProps<Props>();
+
+    const files = ref<File[]>([]);
+
+    function onDrop(event: DragEvent){
+        files.value = Array.from(event.dataTransfer?.files  ?? []);
+        const input = document.getElementById("file-upload") as HTMLInputElement;
+
+        if (input != null)
+            input.files = event.dataTransfer?.files || [];
+
+        event.preventDefault();
+    }
+
+    async function onFileSelect(e: Event){
         files.value = [];
         const input = e.target as HTMLInputElement;
         files.value = Array.from(input?.files || []);
     }
 
-    const props = defineProps<Props>();
+    defineExpose({
+        files
+    });
 </script>
